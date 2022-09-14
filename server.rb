@@ -7,3 +7,7 @@ end
 get '/ping' do
   'pong'
 end
+
+get '/health_check' do
+  'success'
+end
