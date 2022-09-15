@@ -1,14 +1,4 @@
-version: "3.7"
-
-x-web-volumes: &web-volumes
-  - .:/app:cached
-  - bundle_cache:/bundle_cache
-
-x-web-environment: &web-environment
-  - BUNDLE_PATH=/bundle_cache
-  - GEM_HOME=/bundle_cache
-  - GEM_PATH=/bundle_cache
-  - PORT=4000
+version: "2.11.0"
 
 x-aws-vault-environment: &aws-vault-environment
   - AWS_VAULT
@@ -20,6 +10,16 @@ x-aws-vault-environment: &aws-vault-environment
   - AWS_SECURITY_TOKEN
   - AWS_SESSION_EXPIRATION
 
+x-web-volumes: &web-volumes
+  - .:/app:cached
+  - bundle_cache:/bundle_cache
+
+x-web-environment: &web-environment
+  - BUNDLE_PATH=/bundle_cache
+  - GEM_HOME=/bundle_cache
+  - GEM_PATH=/bundle_cache
+  - PORT=4000
+
 services:
   web:
     build: .
@@ -29,6 +29,15 @@ services:
     environment: *web-environment
     command: bash -c "bundle exec rackup"
 
+  remote:
+    profiles: ["frontend"]
+    build: ./docker/remote
+    entrypoint: ""
+    environment: *aws-vault-environment
+    volumes:
+      - ./docker/remote:/app:cached
+      - .aws:/root/.aws
+
   bundle_cache:
     image: busybox
     volumes:
@@ -36,12 +45,3 @@ services:
 
 volumes:
   bundle_cache:
-
-services:
-  remote:
-    build: ./docker/remote
-    entrypoint: ""
-    environment: *aws-vault-environment
-    volumes:
-      - ./docker/remote:/app:cached
-      - .aws:/root/.aws
