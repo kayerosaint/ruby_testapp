@@ -10,6 +10,16 @@ x-web-environment: &web-environment
   - GEM_PATH=/bundle_cache
   - PORT=4000
 
+x-aws-vault-environment: &aws-vault-environment
+  - AWS_VAULT
+  - AWS_DEFAULT_REGION
+  - AWS_REGION
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - AWS_SESSION_TOKEN
+  - AWS_SECURITY_TOKEN
+  - AWS_SESSION_EXPIRATION
+
 services:
   web:
     build: .
@@ -19,7 +29,6 @@ services:
     environment: *web-environment
     command: bash -c "bundle exec rackup"
 
-
   bundle_cache:
     image: busybox
     volumes:
@@ -27,3 +36,12 @@ services:
 
 volumes:
   bundle_cache:
+
+services:
+  remote:
+    build: ./docker/remote
+    entrypoint: ""
+    environment: *aws-vault-environment
+    volumes:
+      - ./docker/remote:/app:cached
+      - .aws:/root/.aws
