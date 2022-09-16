@@ -1,14 +1,17 @@
 version: "2.11.0"
 
 x-aws-vault-environment: &aws-vault-environment
+
   - AWS_VAULT
   - AWS_DEFAULT_REGION
-  - AWS_REGION
-  - AWS_ACCESS_KEY_ID
-  - AWS_SECRET_ACCESS_KEY
+  - AWS_REGION=${AWS_REGION}
+  - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+  - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
   - AWS_SESSION_TOKEN
   - AWS_SECURITY_TOKEN
   - AWS_SESSION_EXPIRATION
+  - ECS_CLUSTER_NAME=${ECS_CLUSTER_NAME}
+  - ECS_TASK_ID=${ECS_TASK_ID}
 
 x-web-volumes: &web-volumes
   - .:/app:cached
@@ -29,19 +32,20 @@ services:
     environment: *web-environment
     command: bash -c "bundle exec rackup"
 
+  bundle_cache:
+    image: busybox
+    volumes:
+      - bundle_cache:/bundle_cache
+
   remote:
-    profiles: ["frontend"]
+    profiles:
+      - debug
     build: ./docker/remote
     entrypoint: ""
     environment: *aws-vault-environment
     volumes:
       - ./docker/remote:/app:cached
       - .aws:/root/.aws
-
-  bundle_cache:
-    image: busybox
-    volumes:
-      - bundle_cache:/bundle_cache
 
 volumes:
   bundle_cache:
