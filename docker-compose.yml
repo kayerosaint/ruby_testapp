@@ -1,17 +1,4 @@
-version: "2.11.0"
-
-x-aws-vault-environment: &aws-vault-environment
-
-  - AWS_VAULT
-  - AWS_DEFAULT_REGION
-  - AWS_REGION=${AWS_REGION}
-  - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-  - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-  - AWS_SESSION_TOKEN
-  - AWS_SECURITY_TOKEN
-  - AWS_SESSION_EXPIRATION
-  - ECS_CLUSTER_NAME=${ECS_CLUSTER_NAME}
-  - ECS_TASK_ID=${ECS_TASK_ID}
+version: "3.9"
 
 x-web-volumes: &web-volumes
   - .:/app:cached
@@ -37,15 +24,22 @@ services:
     volumes:
       - bundle_cache:/bundle_cache
 
-  remote:
-    profiles:
-      - debug
-    build: ./docker/remote
-    entrypoint: ""
-    environment: *aws-vault-environment
+  image:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./docker/remote/Dockerfile
+      args:
+        ECS_CLUSTER_NAME: ${ECS_CLUSTER_NAME}
+        ECS_TASK_ID: ${ECS_TASK_ID}
+        AWS_REGION: ${AWS_REGION}
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
     volumes:
-      - ./docker/remote:/app:cached
-      - .aws:/root/.aws
+      - ./docker/remote:/app/:cached
+      - .aws:/app/.aws
 
 volumes:
   bundle_cache:
