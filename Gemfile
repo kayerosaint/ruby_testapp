@@ -9,3 +9,7 @@ source "https://rubygems.org"
 gem 'sinatra'
 gem 'rack'
 gem 'puma'
+gem 'minitest'
+gem 'rack-test'
+gem 'rake'
+gem 'rubocop'

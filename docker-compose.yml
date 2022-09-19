@@ -17,7 +17,7 @@ services:
     ports:
       - "4000:4000"
     environment: *web-environment
-    command: bash -c "bundle exec rackup"
+    command: bash -c "bundle install; bundle exec rackup"
 
   bundle_cache:
     image: busybox
