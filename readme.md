@@ -1,1 +1,0 @@
-Created for pull information about running apps in ECS containers from AWS. Use command !> docker-compose up --build <! . P.S.You need pull your credentials to local .env file (for security), then u can UP it.
