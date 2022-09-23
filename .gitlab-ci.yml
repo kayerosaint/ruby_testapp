@@ -1,0 +1,83 @@
+stages:
+  - pre_build
+  - build
+  - check
+  - db_migration
+  - deploy
+  - post_deploy
+
+variables:
+  PROJECT: maks-k-one
+  APPLICATION: web
+  AWS_DEFAULT_REGION: eu-west-3
+  AWS_DEFAULT_OUTPUT: json
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_IMAGE: docker:20.10.6
+
+.with_docker_compose: &with_docker_compose
+  before_script:
+    - shopt -s expand_aliases
+    - alias dcr="docker-compose -f docker-compose.ci.yml run --rm"
+    - ecs_helper ecr_login
+    - eval $(ecs_helper export_images)
+
+.with_docker_service: &with_docker_service
+  services:
+    - $DOCKER_IMAGE-dind
+
+.on_project_runner: &on_project_runner
+  tags:
+    - maks-k-one
+
+.on_deployable_branches: &on_deployable_branches
+  only:
+    - staging
+    - master
+
+build_web:
+  <<: *on_project_runner
+  <<: *with_docker_service
+  <<: *with_docker_compose
+  stage: build
+  image: $TOOLBOX_IMAGE:latest
+  script:
+    - ecs_helper build_and_push --image=web --cache
+
+test_web:
+  <<: *on_project_runner
+  <<: *with_docker_service
+  <<: *with_docker_compose
+  stage: check
+  image: $TOOLBOX_IMAGE:latest
+  script:
+    - dcr web make test_web
+
+lint_web:
+  <<: *on_project_runner
+  <<: *with_docker_service
+  <<: *with_docker_compose
+  stage: check
+  image: $TOOLBOX_IMAGE:latest
+  script:
+    - dcr web make lint_web
+
+db_migration:
+  <<: *on_project_runner
+  <<: *on_deployable_branches
+  <<: *with_docker_service
+  <<: *with_docker_compose
+  stage: db_migration
+  image: $TOOLBOX_IMAGE:latest
+  script:
+    - ecs_helper run_command --command "echo 'command succesfully executed'" --name 'db-migrate'
+
+deploy:
+  <<: *on_project_runner
+  <<: *on_deployable_branches
+  <<: *with_docker_service
+  <<: *with_docker_compose
+  stage: deploy
+  image: $TOOLBOX_IMAGE:latest
+  script:
+    - ecs_helper deploy

@@ -1,0 +1,12 @@
+version: "3.7"
+
+x-web-environment: &web-environment
+  - PORT=4000
+
+services:
+  web:
+    image: $WEB_IMAGE
+    ports:
+      - "4000:4000"
+    environment: *web-environment
+    command: bash -c "bundle exec rackup"
